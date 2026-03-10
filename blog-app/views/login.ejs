@@ -1,0 +1,79 @@
+<%- include('partials/head') %>
+<%- include('partials/navbar') %>
+<%- include('partials/flash') %>
+
+<div class="auth-page">
+  <div class="auth-split">
+
+    <!-- Left Panel — Branding -->
+    <div class="auth-panel-left">
+      <div class="auth-brand-block">
+        <div class="auth-logos-grid">
+          <img src="/images/csvtu-logo.jpeg" alt="CSVTU" class="auth-logo" />
+          <img src="/images/nss-logo.jpeg" alt="NSS" class="auth-logo" />
+        </div>
+        <h2 class="auth-panel-title">NSS Blog Portal</h2>
+        <p class="auth-panel-subtitle">Rungta College of Engineering &amp; Technology</p>
+        <div class="auth-panel-divider"></div>
+        <p class="auth-panel-motto">"Not Me But You"</p>
+        <p class="auth-panel-desc">A platform for NSS volunteers to share stories, experiences, and inspire others through the spirit of service.</p>
+
+        <div class="auth-logos-row">
+          <img src="/images/mybharat-logo.jpeg" alt="My Bharat" class="auth-logo-sm auth-logo-mybharat" />
+          <img src="/images/ministry-logo.jpeg" alt="Ministry" class="auth-logo-sm auth-logo-ministry" />
+          <img src="/images/rungta-logo.jpeg" alt="Rungta" class="auth-logo-sm auth-logo-rungta-sm" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Panel — Form -->
+    <div class="auth-panel-right">
+      <div class="auth-form-wrap">
+        <div class="auth-form-header">
+          <img src="/images/nss-logo.jpeg" alt="NSS" style="width:52px; height:52px; border-radius:50%; object-fit:cover; border:2px solid var(--nss-blue); margin-bottom:1rem;" />
+          <h1 class="auth-form-title">Welcome Back</h1>
+          <p class="auth-form-sub">Sign in to your NSS account</p>
+        </div>
+
+        <form action="/auth/login" method="POST" novalidate>
+          <div class="form-group">
+            <label for="email" class="form-label">Email Address</label>
+            <div class="input-with-icon">
+              <span class="input-icon">✉</span>
+              <input type="email" id="email" name="email" class="form-input input-padded"
+                placeholder="yourname@email.com" required autocomplete="email" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="password" class="form-label">Password</label>
+            <div class="input-with-icon">
+              <span class="input-icon">🔒</span>
+              <input type="password" id="password" name="password" class="form-input input-padded"
+                placeholder="Your password" required autocomplete="current-password" />
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-nss" style="width:100%; justify-content:center; margin-top:0.75rem;">
+            Sign In to NSS Blog →
+          </button>
+        </form>
+
+        <p class="auth-switch">
+          New volunteer? <a href="/auth/register">Create your account</a>
+        </p>
+
+        <div class="auth-tagline-row">
+          <span>सत्यमेव जयते</span>
+          <span>·</span>
+          <span>ज्ञानं ज्ञेयं परिज्ञाता</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<%- include('partials/footer') %>
+</body>
+</html>

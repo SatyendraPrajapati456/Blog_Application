@@ -1,0 +1,167 @@
+<%- include('partials/head') %>
+<%- include('partials/navbar') %>
+<%- include('partials/flash') %>
+
+<style>
+  .upload-zone {
+    border: 2px dashed var(--border); border-radius: 8px; padding: 2rem;
+    text-align: center; cursor: pointer; transition: all 0.2s ease;
+    background: var(--cream); position: relative; overflow: hidden;
+  }
+  .upload-zone:hover, .upload-zone.drag-over { border-color: var(--accent); background: rgba(200,69,43,0.04); }
+  .upload-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .upload-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+  .upload-label { font-size: 0.9rem; color: var(--muted); line-height: 1.5; }
+  .upload-label strong { color: var(--accent); }
+  .upload-hint { font-size: 0.78rem; color: var(--muted); margin-top: 0.35rem; font-family: 'DM Mono', monospace; }
+
+  .image-preview-wrap { position: relative; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); background: #f0ebe3; }
+  .image-preview-wrap img { width: 100%; max-height: 320px; object-fit: cover; display: block; }
+  .preview-actions { position: absolute; top: 0.75rem; right: 0.75rem; display: flex; gap: 0.5rem; }
+  .preview-btn { background: rgba(14,14,14,0.7); color: white; border: none; border-radius: 4px; padding: 0.4rem 0.75rem; font-size: 0.78rem; font-family: 'DM Sans', sans-serif; cursor: pointer; font-weight: 600; backdrop-filter: blur(4px); transition: background 0.2s; }
+  .preview-btn:hover { background: rgba(14,14,14,0.9); }
+  .preview-btn.remove { background: rgba(200,69,43,0.8); }
+  .preview-btn.remove:hover { background: rgba(200,69,43,1); }
+  .preview-caption { padding: 0.6rem 1rem; font-size: 0.78rem; color: var(--muted); font-family: 'DM Mono', monospace; background: var(--cream); border-top: 1px solid var(--border); }
+</style>
+
+<div class="container">
+  <div class="page-header">
+    <h1><%= blog ? 'Edit your story' : 'Write a new story' %></h1>
+    <p><%= blog ? 'Update your story below.' : 'Share your ideas with the world.' %></p>
+  </div>
+
+  <div class="form-card form-card-wide">
+    <% if (blog) { %>
+      <form action="/blogs/<%= blog._id %>?_method=PUT" method="POST" enctype="multipart/form-data" novalidate>
+    <% } else { %>
+      <form action="/blogs" method="POST" enctype="multipart/form-data" novalidate>
+    <% } %>
+
+      <!-- Title -->
+      <div class="form-group">
+        <label for="title" class="form-label">Story Title</label>
+        <input type="text" id="title" name="title" class="form-input"
+          placeholder="Enter a compelling title..."
+          required minlength="5" maxlength="150"
+          value="<%= blog ? blog.title : '' %>" />
+        <div class="char-count"><span id="title-count">0</span> / 150</div>
+      </div>
+
+      <!-- Category -->
+      <div class="form-group">
+        <label for="category" class="form-label">Category</label>
+        <select id="category" name="category" class="form-select">
+          <% categories.forEach(cat => { %>
+            <option value="<%= cat %>" <%= blog && blog.category === cat ? 'selected' : (!blog && cat === 'Other' ? 'selected' : '') %>>
+              <%= cat %>
+            </option>
+          <% }) %>
+        </select>
+      </div>
+
+      <!-- Cover Image -->
+      <div class="form-group">
+        <label class="form-label">
+          Cover Image
+          <span style="color:var(--muted); text-transform:none; letter-spacing:0; font-weight:400; font-size:0.78rem; margin-left:0.25rem;">optional · max 5MB</span>
+        </label>
+
+        <% if (blog && blog.coverImage) { %>
+          <div class="image-preview-wrap" id="existing-preview">
+            <img src="<%= blog.coverImage %>" alt="Current cover image" />
+            <div class="preview-actions">
+              <button type="button" class="preview-btn" onclick="showReplaceZone()">↑ Replace</button>
+              <button type="button" class="preview-btn remove" onclick="removeExistingImage()">✕ Remove</button>
+            </div>
+            <div class="preview-caption">Current cover image</div>
+          </div>
+          <input type="hidden" name="removeImage" id="removeImage" value="false" />
+        <% } %>
+
+        <div id="upload-zone-wrap" <% if (blog && blog.coverImage) { %>style="display:none; margin-top:0.75rem;"<% } %>>
+          <div class="upload-zone" id="upload-zone">
+            <input type="file" name="coverImage" id="coverImage" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp" />
+            <div class="upload-icon">🖼️</div>
+            <div class="upload-label"><strong>Click to upload</strong> or drag &amp; drop</div>
+            <div class="upload-hint">JPEG · PNG · GIF · WebP — max 5MB</div>
+          </div>
+          <div class="image-preview-wrap" id="new-preview" style="display:none; margin-top:0.75rem;">
+            <img id="preview-img" src="" alt="Preview" />
+            <div class="preview-actions">
+              <button type="button" class="preview-btn remove" onclick="clearNewImage()">✕ Remove</button>
+            </div>
+            <div class="preview-caption" id="preview-caption"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Content -->
+      <div class="form-group">
+        <label for="content" class="form-label">Content</label>
+        <textarea id="content" name="content" class="form-textarea"
+          placeholder="Tell your story..."
+          required minlength="20" style="min-height: 350px;"><%= blog ? blog.content : '' %></textarea>
+        <div class="char-count"><span id="content-count">0</span> characters</div>
+      </div>
+
+      <div style="display:flex; gap:0.75rem; align-items:center; flex-wrap:wrap;">
+        <button type="submit" class="btn btn-primary">
+          <%= blog ? '✓ Save Changes' : '↑ Publish Story' %>
+        </button>
+        <% if (blog) { %>
+          <a href="/blogs/<%= blog._id %>" class="btn btn-outline">Cancel</a>
+        <% } else { %>
+          <a href="/blogs" class="btn btn-outline">Cancel</a>
+        <% } %>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  const titleInput = document.getElementById('title');
+  const contentInput = document.getElementById('content');
+  const titleCount = document.getElementById('title-count');
+  const contentCount = document.getElementById('content-count');
+  const updateCount = (el, d) => { d.textContent = el.value.length; };
+  updateCount(titleInput, titleCount); updateCount(contentInput, contentCount);
+  titleInput.addEventListener('input', () => updateCount(titleInput, titleCount));
+  contentInput.addEventListener('input', () => updateCount(contentInput, contentCount));
+
+  const fileInput = document.getElementById('coverImage');
+  const uploadZone = document.getElementById('upload-zone');
+  const uploadZoneWrap = document.getElementById('upload-zone-wrap');
+  const newPreview = document.getElementById('new-preview');
+  const previewImg = document.getElementById('preview-img');
+  const previewCaption = document.getElementById('preview-caption');
+
+  function showPreview(file) {
+    if (file.size > 5 * 1024 * 1024) { alert('Image must be under 5MB.'); fileInput.value = ''; return; }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      previewImg.src = ev.target.result;
+      const mb = file.size / (1024 * 1024);
+      previewCaption.textContent = file.name + ' · ' + (mb < 1 ? Math.round(file.size/1024) + ' KB' : mb.toFixed(2) + ' MB');
+      uploadZone.style.display = 'none'; newPreview.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  }
+  if (fileInput) {
+    fileInput.addEventListener('change', (e) => { const f = e.target.files[0]; if (f) showPreview(f); });
+    uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+    uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+    uploadZone.addEventListener('drop', (e) => {
+      e.preventDefault(); uploadZone.classList.remove('drag-over');
+      const f = e.dataTransfer.files[0];
+      if (f && f.type.startsWith('image/')) { const dt = new DataTransfer(); dt.items.add(f); fileInput.files = dt.files; showPreview(f); }
+    });
+  }
+  function clearNewImage() { fileInput.value = ''; previewImg.src = ''; newPreview.style.display = 'none'; uploadZone.style.display = 'block'; }
+  function showReplaceZone() { document.getElementById('existing-preview').style.display = 'none'; uploadZoneWrap.style.display = 'block'; }
+  function removeExistingImage() { const ri = document.getElementById('removeImage'); if (ri) ri.value = 'true'; document.getElementById('existing-preview').style.display = 'none'; uploadZoneWrap.style.display = 'block'; }
+</script>
+
+<%- include('partials/footer') %>
+</body>
+</html>
