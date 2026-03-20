@@ -1,0 +1,107 @@
+<%- include('../partials/head') %>
+<%- include('../partials/navbar') %>
+<%- include('../partials/flash') %>
+
+<div class="container">
+  <div class="page-header">
+    <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1rem;">
+      <div>
+        <h1>My Stories</h1>
+        <p><%= blogs.length %> <%= blogs.length === 1 ? 'story' : 'stories' %> published</p>
+      </div>
+      <a href="/blogs/new" class="btn btn-primary">+ Write New Story</a>
+    </div>
+  </div>
+
+  <% if (blogs.length === 0) { %>
+    <div class="empty-state">
+      <div class="empty-state-icon">✍️</div>
+      <h2>No stories yet</h2>
+      <p>You haven't published anything yet. Start writing your first story!</p>
+      <a href="/blogs/new" class="btn btn-primary">Write your first story</a>
+    </div>
+  <% } else { %>
+    <!-- Desktop table -->
+    <div style="overflow-x:auto;">
+      <table class="my-blogs-table">
+        <thead>
+          <tr>
+            <th style="width:45%;">Title</th>
+            <th>Category</th>
+            <th>Comments</th>
+            <th>Published</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% blogs.forEach(blog => { %>
+            <tr>
+              <td>
+                <a href="/blogs/<%= blog._id %>" class="blog-title-link"><%= blog.title %></a>
+                <% if (blog.coverImage) { %>
+                  <span style="font-size:0.75rem; color:var(--muted); margin-left:0.4rem;">🖼</span>
+                <% } %>
+              </td>
+              <td>
+                <span class="category-badge"><%= blog.category || 'Other' %></span>
+              </td>
+              <td>
+                <span style="font-family:'DM Mono',monospace; font-size:0.82rem; color:var(--muted);">
+                  <%= countMap[blog._id.toString()] || 0 %>
+                </span>
+              </td>
+              <td>
+                <span style="font-family:'DM Mono',monospace; font-size:0.82rem; color:var(--muted);">
+                  <%= blog.createdAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %>
+                </span>
+              </td>
+              <td>
+                <div style="display:flex; gap:0.4rem; align-items:center;">
+                  <a href="/blogs/<%= blog._id %>/edit" class="btn btn-outline btn-xs">✎ Edit</a>
+                  <form action="/blogs/<%= blog._id %>?_method=DELETE" method="POST"
+                        onsubmit="return confirm('Delete this story permanently?')" style="display:inline;">
+                    <button type="submit" class="btn btn-danger btn-xs">✕ Delete</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Summary stats -->
+    <div style="display:flex; gap:1.5rem; margin-top:2rem; flex-wrap:wrap;">
+      <div style="background:white; border:1px solid var(--border); border-radius:10px; padding:1.25rem 1.5rem; flex:1; min-width:140px;">
+        <div style="font-family:'Playfair Display',serif; font-size:2rem; font-weight:900;"><%= blogs.length %></div>
+        <div style="font-size:0.82rem; color:var(--muted); margin-top:0.2rem;">Total Stories</div>
+      </div>
+      <div style="background:white; border:1px solid var(--border); border-radius:10px; padding:1.25rem 1.5rem; flex:1; min-width:140px;">
+        <div style="font-family:'Playfair Display',serif; font-size:2rem; font-weight:900;">
+          <%= Object.values(countMap).reduce((a,b) => a+b, 0) %>
+        </div>
+        <div style="font-size:0.82rem; color:var(--muted); margin-top:0.2rem;">Total Responses</div>
+      </div>
+      <div style="background:white; border:1px solid var(--border); border-radius:10px; padding:1.25rem 1.5rem; flex:1; min-width:140px;">
+        <div style="font-family:'Playfair Display',serif; font-size:2rem; font-weight:900;">
+          <%= blogs.filter(b => b.coverImage).length %>
+        </div>
+        <div style="font-size:0.82rem; color:var(--muted); margin-top:0.2rem;">With Cover Image</div>
+      </div>
+      <div style="background:white; border:1px solid var(--border); border-radius:10px; padding:1.25rem 1.5rem; flex:1; min-width:140px;">
+        <% const cats = [...new Set(blogs.map(b => b.category))]; %>
+        <div style="font-family:'Playfair Display',serif; font-size:2rem; font-weight:900;"><%= cats.length %></div>
+        <div style="font-size:0.82rem; color:var(--muted); margin-top:0.2rem;">Categories Used</div>
+      </div>
+    </div>
+  <% } %>
+
+  <div style="margin-top:2rem;">
+    <a href="/blogs" class="btn btn-outline btn-sm">← All Stories</a>
+    <a href="/auth/profile" class="btn btn-ghost btn-sm" style="margin-left:0.5rem;">My Profile</a>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>
+</body>
+</html>

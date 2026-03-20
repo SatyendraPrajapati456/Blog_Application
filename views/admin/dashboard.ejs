@@ -1,0 +1,265 @@
+<%- include('../partials/head') %>
+<%- include('../partials/navbar') %>
+<%- include('../partials/flash') %>
+
+<div class="container" style="padding-top: 2rem; padding-bottom: 4rem;">
+
+  <!-- Admin Header -->
+  <div class="admin-dashboard-header">
+    <div class="admin-dashboard-title-row">
+      <div>
+        <div class="admin-badge-large">🛡️ NSS Admin</div>
+        <h1 class="admin-dashboard-title">Disciplinary Control Panel</h1>
+        <p class="admin-dashboard-sub">Logged in as <strong><%= currentUser.email %></strong> — Full moderation access</p>
+      </div>
+      <img src="/images/nss-logo.jpeg" alt="NSS" class="admin-header-logo" />
+    </div>
+
+    <!-- Stats row -->
+    <div class="admin-stats-row">
+      <div class="admin-stat-card">
+        <div class="admin-stat-num"><%= totalBlogs %></div>
+        <div class="admin-stat-label">Total Blogs</div>
+      </div>
+      <div class="admin-stat-card">
+        <div class="admin-stat-num"><%= totalComments %></div>
+        <div class="admin-stat-label">Total Comments</div>
+      </div>
+      <div class="admin-stat-card">
+        <div class="admin-stat-num"><%= totalUsers %></div>
+        <div class="admin-stat-label">Registered Users</div>
+      </div>
+      <div class="admin-stat-card">
+        <div class="admin-stat-num"><%= totalLikes %></div>
+        <div class="admin-stat-label">Total Likes</div>
+      </div>
+      <div class="admin-stat-card admin-stat-accent">
+        <div class="admin-stat-num">∞</div>
+        <div class="admin-stat-label">Admin Control</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- All Blogs Table -->
+  <div class="admin-section">
+    <h2 class="admin-section-title">📝 All Blogs <span class="admin-count-badge"><%= totalBlogs %></span></h2>
+    <div class="admin-table-wrap">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Title</th>
+            <th>Author</th>
+            <th>Category</th>
+            <th>Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% recentBlogs.forEach((blog, i) => { %>
+            <tr>
+              <td class="admin-table-num"><%= i + 1 %></td>
+              <td>
+                <a href="/blogs/<%= blog._id %>" class="admin-link" target="_blank">
+                  <%= blog.title.length > 55 ? blog.title.substring(0, 55) + '…' : blog.title %>
+                </a>
+              </td>
+              <td>
+                <div class="admin-author-cell">
+                  <span><%= blog.author ? blog.author.name : 'Unknown' %></span>
+                  <span class="admin-email-tiny"><%= blog.author ? blog.author.email : '' %></span>
+                </div>
+              </td>
+              <td><span class="category-badge" style="font-size:0.72rem;"><%= blog.category || 'Other' %></span></td>
+              <td class="admin-date-cell"><%= blog.createdAt.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }) %></td>
+              <td>
+                <div class="admin-action-btns">
+                  <a href="/blogs/<%= blog._id %>/edit" class="btn btn-admin-edit btn-xs">✎ Edit</a>
+                  <form action="/blogs/<%= blog._id %>?_method=DELETE" method="POST" style="display:inline;"
+                        onsubmit="return confirm('ADMIN: Permanently remove &quot;<%= blog.title.replace(/'/g, '') %>&quot; and all its comments?')">
+                    <button type="submit" class="btn btn-admin-delete btn-xs">🚫 Remove</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          <% }) %>
+          <% if (recentBlogs.length === 0) { %>
+            <tr><td colspan="6" class="admin-empty">No blogs found.</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+    <% if (totalBlogs > 20) { %>
+      <p class="admin-table-note">Showing latest 20 of <%= totalBlogs %> blogs.</p>
+    <% } %>
+  </div>
+
+  <!-- All Comments Table -->
+  <div class="admin-section">
+    <h2 class="admin-section-title">💬 All Comments <span class="admin-count-badge"><%= totalComments %></span></h2>
+    <div class="admin-table-wrap">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Comment</th>
+            <th>By</th>
+            <th>On Blog</th>
+            <th>Date</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% recentComments.forEach((comment, i) => { %>
+            <tr>
+              <td class="admin-table-num"><%= i + 1 %></td>
+              <td class="admin-comment-text">
+                <%= comment.text.length > 80 ? comment.text.substring(0, 80) + '…' : comment.text %>
+              </td>
+              <td>
+                <div class="admin-author-cell">
+                  <span><%= comment.author ? comment.author.name : 'Unknown' %></span>
+                  <span class="admin-email-tiny"><%= comment.author ? comment.author.email : '' %></span>
+                </div>
+              </td>
+              <td>
+                <% if (comment.blog) { %>
+                  <a href="/blogs/<%= comment.blog._id %>" class="admin-link" target="_blank">
+                    <%= comment.blog.title.length > 35 ? comment.blog.title.substring(0, 35) + '…' : comment.blog.title %>
+                  </a>
+                <% } else { %>
+                  <span class="admin-deleted-ref">[blog deleted]</span>
+                <% } %>
+              </td>
+              <td class="admin-date-cell"><%= comment.createdAt.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }) %></td>
+              <td>
+                <% if (comment.blog) { %>
+                  <form action="/blogs/<%= comment.blog._id %>/comments/<%= comment._id %>?_method=DELETE" method="POST"
+                        style="display:inline;"
+                        onsubmit="return confirm('ADMIN: Remove this comment?')">
+                    <button type="submit" class="btn btn-admin-delete btn-xs">🚫 Remove</button>
+                  </form>
+                <% } else { %>
+                  <span class="admin-deleted-ref">—</span>
+                <% } %>
+              </td>
+            </tr>
+          <% }) %>
+          <% if (recentComments.length === 0) { %>
+            <tr><td colspan="6" class="admin-empty">No comments found.</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+    <% if (totalComments > 30) { %>
+      <p class="admin-table-note">Showing latest 30 of <%= totalComments %> comments.</p>
+    <% } %>
+  </div>
+
+  <!-- Users Management Table -->
+  <div class="admin-section">
+    <h2 class="admin-section-title">👥 All Users <span class="admin-count-badge"><%= totalUsers %></span></h2>
+    <div class="admin-table-wrap">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Joined</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% allUsers.forEach((u, i) => { %>
+            <tr class="<%= u.banned ? 'admin-row-banned' : '' %>">
+              <td class="admin-table-num"><%= i + 1 %></td>
+              <td>
+                <div style="display:flex; align-items:center; gap:0.6rem;">
+                  <div class="admin-user-avatar">
+                    <% if (u.avatar) { %>
+                      <img src="<%= u.avatar %>" alt="<%= u.name %>" />
+                    <% } else { %>
+                      <%= u.name.charAt(0).toUpperCase() %>
+                    <% } %>
+                  </div>
+                  <span style="font-weight:500;"><%= u.name %></span>
+                </div>
+              </td>
+              <td class="admin-email-tiny" style="font-size:0.82rem;"><%= u.email %></td>
+              <td class="admin-date-cell"><%= u.createdAt.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }) %></td>
+              <td>
+                <% if (u.email === currentUser.email) { %>
+                  <span class="admin-status-badge admin-badge-admin">🛡️ Admin</span>
+                <% } else if (u.banned) { %>
+                  <span class="admin-status-badge admin-badge-banned">🚫 Banned</span>
+                <% } else { %>
+                  <span class="admin-status-badge admin-badge-active">✓ Active</span>
+                <% } %>
+              </td>
+              <td>
+                <% if (u.email !== currentUser.email) { %>
+                  <form action="/blogs/admin/ban/<%= u._id %>?_method=POST" method="POST" style="display:inline;"
+                        onsubmit="return confirm('<%= u.banned ? 'Reinstate' : 'Ban' %> <%= u.name %>?')">
+                    <button type="submit" class="btn <%= u.banned ? 'btn-admin-edit' : 'btn-admin-delete' %> btn-xs">
+                      <%= u.banned ? '✅ Reinstate' : '🚫 Ban' %>
+                    </button>
+                  </form>
+                <% } else { %>
+                  <span style="font-size:0.75rem; color:var(--muted);">You</span>
+                <% } %>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Announcement Panel -->
+  <div class="admin-section">
+    <h2 class="admin-section-title">📢 Site Announcement</h2>
+    <div class="admin-announcement-panel">
+      <p class="admin-ann-desc">Post a message that appears at the top of every page for all users. Leave blank to clear the current announcement.</p>
+
+      <% if (announcement) { %>
+        <div class="admin-ann-preview admin-ann-preview-<%= announcement.type %>">
+          <strong>Current:</strong> <%= announcement.message %>
+        </div>
+      <% } else { %>
+        <div class="admin-ann-preview admin-ann-preview-none">No active announcement.</div>
+      <% } %>
+
+      <form action="/blogs/admin/announcement" method="POST" style="margin-top:1.25rem;">
+        <div class="form-group">
+          <label class="form-label">Announcement Message <span style="font-weight:400; text-transform:none; color:var(--muted);">(leave blank to clear)</span></label>
+          <textarea name="message" class="form-textarea" style="min-height:70px;" maxlength="300"
+            placeholder="e.g. NSS Camp registration is now open! Visit admin office by Friday."><%= announcement ? announcement.message : '' %></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Type</label>
+          <select name="type" class="form-select" style="max-width:200px;">
+            <option value="info"    <%= !announcement || announcement.type === 'info'    ? 'selected' : '' %>>📢 Info (Blue)</option>
+            <option value="warning" <%= announcement && announcement.type === 'warning'  ? 'selected' : '' %>>⚠️ Warning (Orange)</option>
+            <option value="success" <%= announcement && announcement.type === 'success'  ? 'selected' : '' %>>✅ Success (Green)</option>
+          </select>
+        </div>
+        <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">
+          <button type="submit" class="btn btn-nss">📢 Publish Announcement</button>
+          <% if (announcement) { %>
+            <button type="submit" name="message" value="" class="btn btn-outline btn-sm" onclick="this.form.message.value=''">✕ Clear Announcement</button>
+          <% } %>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div style="margin-top:2rem;">
+    <a href="/blogs" class="btn btn-outline">← Back to Blog</a>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>
+</body>
+</html>

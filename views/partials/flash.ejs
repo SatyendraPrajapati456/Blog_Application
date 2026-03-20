@@ -1,0 +1,26 @@
+<% if (typeof announcement !== 'undefined' && announcement) { %>
+  <div class="site-announcement site-announcement-<%= announcement.type %>" id="site-announcement">
+    <div class="site-announcement-inner">
+      <span class="site-announcement-icon">
+        <% if (announcement.type === 'warning') { %>⚠️<% } else if (announcement.type === 'success') { %>✅<% } else { %>📢<% } %>
+      </span>
+      <span class="site-announcement-text"><%= announcement.message %></span>
+      <button class="site-announcement-close" onclick="this.parentElement.parentElement.style.display='none'" title="Dismiss">×</button>
+    </div>
+  </div>
+<% } %>
+
+<% if (successMsg && successMsg.length > 0) { %>
+  <div class="flash-container">
+    <% successMsg.forEach(msg => { %>
+      <div class="flash flash-success">✓ <%= msg %></div>
+    <% }) %>
+  </div>
+<% } %>
+<% if (errorMsg && errorMsg.length > 0) { %>
+  <div class="flash-container">
+    <% errorMsg.forEach(msg => { %>
+      <div class="flash flash-error">⚠ <%= msg %></div>
+    <% }) %>
+  </div>
+<% } %>

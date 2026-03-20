@@ -1,0 +1,55 @@
+<aside class="sidebar">
+  <!-- Category Filter -->
+  <div class="sidebar-section">
+    <div class="sidebar-title">📂 Categories</div>
+
+    <a href="/blogs?<%= activeTime ? 'time=' + activeTime + '&' : '' %><%= search ? 'search=' + encodeURIComponent(search) : '' %>"
+       class="sidebar-item <%= !activeCategory ? 'active' : '' %>">
+      <span class="sidebar-item-label">
+        <span class="sidebar-item-icon">🏠</span> All Topics
+      </span>
+      <span class="sidebar-dot"></span>
+    </a>
+
+    <% const catIcons = { Technology:'💻', Programming:'⌨️', AI:'🤖', Education:'📚', Lifestyle:'🌿', Health:'❤️', Business:'💼', Science:'🔬', Other:'✦' }; %>
+    <% categories.forEach(cat => { %>
+      <a href="/blogs?category=<%= cat %><%= activeTime ? '&time=' + activeTime : '' %><%= search ? '&search=' + encodeURIComponent(search) : '' %>"
+         class="sidebar-item <%= activeCategory === cat ? 'active' : '' %>">
+        <span class="sidebar-item-label">
+          <span class="sidebar-item-icon"><%= catIcons[cat] || '•' %></span>
+          <%= cat %>
+        </span>
+        <span class="sidebar-dot"></span>
+      </a>
+    <% }) %>
+  </div>
+
+  <!-- Time Filter -->
+  <div class="sidebar-section">
+    <div class="sidebar-title">🕐 Time Period</div>
+
+    <% const timeOptions = [
+      { value: '', label: 'All Time', icon: '∞' },
+      { value: 'today', label: 'Today', icon: '☀️' },
+      { value: 'week', label: 'This Week', icon: '📅' },
+      { value: 'month', label: 'This Month', icon: '🗓️' },
+      { value: 'year', label: 'This Year', icon: '📆' },
+    ]; %>
+
+    <% timeOptions.forEach(opt => { %>
+      <a href="/blogs?<%= activeCategory ? 'category=' + activeCategory + '&' : '' %><%= opt.value ? 'time=' + opt.value : '' %><%= search ? '&search=' + encodeURIComponent(search) : '' %>"
+         class="sidebar-item <%= activeTime === opt.value ? 'active' : '' %>">
+        <span class="sidebar-item-label">
+          <span class="sidebar-item-icon"><%= opt.icon %></span>
+          <%= opt.label %>
+        </span>
+        <span class="sidebar-dot"></span>
+      </a>
+    <% }) %>
+  </div>
+
+  <!-- Reset -->
+  <% if (activeCategory || activeTime || (typeof search !== 'undefined' && search)) { %>
+    <a href="/blogs" class="filter-reset">✕ Clear all filters</a>
+  <% } %>
+</aside>
