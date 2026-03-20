@@ -151,9 +151,18 @@ const postProfile = async (req, res) => {
     if (bio !== undefined) user.bio = bio.trim().substring(0, 300);
 
     // If a new avatar was uploaded via Cloudinary
-    if (req.file && req.file.path) {
-      await deleteImage(user.avatar);       // delete old avatar from Cloudinary
-      user.avatar = req.file.path;          // Cloudinary secure URL
+    if (req.file) {
+      const cloudinaryUrl = req.file.path || req.file.secure_url;
+      if (cloudinaryUrl && cloudinaryUrl.startsWith('https://')) {
+        // Delete old avatar from Cloudinary if it exists
+        if (user.avatar) {
+          await deleteImage(user.avatar);
+        }
+        user.avatar = cloudinaryUrl;
+      } else {
+        req.flash('error', 'Unable to upload image. Please try again.');
+        return res.redirect('/auth/profile');
+      }
     }
 
     await user.save();
@@ -164,8 +173,11 @@ const postProfile = async (req, res) => {
     req.flash('success', 'Profile updated!');
     res.redirect('/auth/profile');
   } catch (err) {
-    if (req.file && req.file.path) await deleteImage(req.file.path);
-    req.flash('error', 'Failed to update profile.');
+    if (req.file && req.file.path) {
+      await deleteImage(req.file.path).catch(e => console.error('Cleanup error:', e));
+    }
+    console.error('Profile update error:', err);
+    req.flash('error', err.message || 'Failed to update profile.');
     res.redirect('/auth/profile');
   }
 };

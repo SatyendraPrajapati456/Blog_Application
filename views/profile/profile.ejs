@@ -73,13 +73,14 @@
             <% } %>
           </div>
           <div class="avatar-upload-controls">
-            <label class="btn btn-outline btn-sm avatar-file-label" for="avatar-file">
+            <button type="button" class="btn btn-outline btn-sm" id="avatar-btn" style="cursor: pointer;">
               📷 Choose Photo
-            </label>
+            </button>
             <input type="file" id="avatar-file" name="avatar"
               accept="image/jpeg,image/jpg,image/png,image/webp"
               style="display:none;" />
             <p class="avatar-upload-hint">JPG, PNG or WebP · max 2 MB<br>Uploaded to Cloudinary and auto-cropped to a square.</p>
+            <p id="avatar-status" style="display:none; font-size:0.75rem; margin-top:0.3rem;"></p>
             <% if (user.avatar) { %>
               <p class="avatar-current-note">✓ Current photo stored on Cloudinary</p>
             <% } %>
@@ -122,38 +123,79 @@
   const bioCount = document.getElementById('bio-count');
   bioInput?.addEventListener('input', () => { bioCount.textContent = bioInput.value.length; });
 
-  // Avatar live preview
-  const avatarFile  = document.getElementById('avatar-file');
-  const thumbImg    = document.getElementById('avatar-thumb-img');
-  const thumbInit   = document.getElementById('avatar-thumb-initial');
-  const bigWrap     = document.getElementById('avatar-preview-wrap');
+  // Avatar upload handler
+  const avatarFile   = document.getElementById('avatar-file');
+  const avatarBtn    = document.getElementById('avatar-btn');
+  const thumbImg     = document.getElementById('avatar-thumb-img');
+  const thumbInit    = document.getElementById('avatar-thumb-initial');
+  const bigWrap      = document.getElementById('avatar-preview-wrap');
+  const avatarStatus = document.getElementById('avatar-status');
 
-  avatarFile?.addEventListener('change', () => {
-    const file = avatarFile.files[0];
-    if (!file) return;
+  // Open file picker when button is clicked
+  avatarBtn?.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    avatarFile?.click();
+  });
+
+  // Handle file selection
+  avatarFile?.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) {
+      avatarStatus.style.display = 'none';
+      return;
+    }
+
+    // Validate file size (max 2MB)
+    const maxSize = 2 * 1024 * 1024;
+    if (file.size > maxSize) {
+      avatarStatus.style.display = 'block';
+      avatarStatus.textContent = '❌ File too large (max 2 MB)';
+      avatarStatus.style.color = 'var(--nss-red)';
+      avatarFile.value = '';
+      return;
+    }
+
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      avatarStatus.style.display = 'block';
+      avatarStatus.textContent = '❌ Invalid file type (JPG, PNG, WebP only)';
+      avatarStatus.style.color = 'var(--nss-red)';
+      avatarFile.value = '';
+      return;
+    }
+
+    // Show loading state
+    avatarStatus.style.display = 'block';
+    avatarStatus.textContent = '⏳ Preparing image...';
+    avatarStatus.style.color = 'var(--muted)';
+
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = (event) => {
       // Update small thumb
       if (thumbImg) {
-        thumbImg.src = e.target.result;
-      } else {
-        // No existing img — create one
+        thumbImg.src = event.target.result;
+      } else if (thumbInit) {
         const img = document.createElement('img');
-        img.src = e.target.result;
-        img.id  = 'avatar-thumb-img';
-        if (thumbInit) thumbInit.replaceWith(img);
-        else document.getElementById('avatar-thumb').appendChild(img);
+        img.src = event.target.result;
+        img.id = 'avatar-thumb-img';
+        thumbInit.replaceWith(img);
       }
+
       // Update big profile avatar too
-      const bigImg  = bigWrap.querySelector('img');
-      const bigSpan = bigWrap.querySelector('span');
+      const bigImg = bigWrap?.querySelector('img');
+      const bigSpan = bigWrap?.querySelector('span');
       if (bigImg) {
-        bigImg.src = e.target.result;
+        bigImg.src = event.target.result;
       } else if (bigSpan) {
         const newImg = document.createElement('img');
-        newImg.src = e.target.result;
+        newImg.src = event.target.result;
         bigSpan.replaceWith(newImg);
       }
+
+      avatarStatus.textContent = '✓ Image selected. Click "Save Changes" to upload.';
+      avatarStatus.style.color = 'var(--nss-green)';
     };
     reader.readAsDataURL(file);
   });
