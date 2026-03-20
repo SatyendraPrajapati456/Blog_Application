@@ -94,11 +94,20 @@ const postLogin = async (req, res) => {
       return res.redirect('/auth/login');
     }
     req.session.userId = user._id;
-    req.session.user   = { _id: user._id, name: user.name, email: user.email, avatar: user.avatar };
-    await LoginHistory.create({ user: user._id, ipAddress: getIP(req), deviceInfo: getDeviceInfo(req.headers['user-agent']), status: 'success' });
-    req.flash('success', `Welcome back, ${user.name}!`);
-    res.redirect('/');
+    req.session.user   = { _id: user._id, name: user.name, email: user.email, avatar: user.avatar, role: user.role };
+    // ✅ Save session explicitly to ensure cookie is set
+    req.session.save((err) => {
+      if (err) {
+        console.error('Session save error:', err);
+        req.flash('error', 'Session error. Please try again.');
+        return res.redirect('/auth/login');
+      }
+      LoginHistory.create({ user: user._id, ipAddress: getIP(req), deviceInfo: getDeviceInfo(req.headers['user-agent']), status: 'success' }).catch(e => console.error('LoginHistory error:', e));
+      req.flash('success', `Welcome back, ${user.name}!`);
+      res.redirect('/');
+    });
   } catch (err) {
+    console.error('Login error:', err);
     req.flash('error', 'Login failed. Please try again.');
     res.redirect('/auth/login');
   }

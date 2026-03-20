@@ -22,6 +22,12 @@ connectDB();
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
+// ✅ CRITICAL for production: Trust reverse proxy (Render, Heroku, etc.)
+// This allows Express to read X-Forwarded-Proto header to know if original request was HTTPS
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
+
 // Static files
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -35,12 +41,14 @@ app.use(methodOverride('_method'));
 // Session
 app.use(
   session({
-    secret: process.env.SESSION_SECRET || 'fallback-secret',
+    secret: process.env.SESSION_SECRET || 'fallback-secret-change-me-in-production',
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+      httpOnly: true,                              // ✅ Prevents XSS attacks
+      sameSite: 'lax',                             // ✅ CSRF protection
+      secure: process.env.NODE_ENV === 'production', // ✅ HTTPS only in production
+      maxAge: 1000 * 60 * 60 * 24 * 7,            // 7 days
     },
   })
 );
