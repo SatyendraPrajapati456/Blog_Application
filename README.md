@@ -140,4 +140,4 @@ blog-app/
 
 
 Live Link is 
-https://blog-application-xuuh.onrender.com/blogs
+https://blog-application-pqtf.onrender.com
